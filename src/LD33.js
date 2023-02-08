@@ -12,7 +12,11 @@ var LD33 = function() {
             alert ("Yer browser be not workin");
         }
 
-        this.options = {};
+        // 启动自定义配置表
+        this.options = {
+            debug: true,
+            skipIntro: true
+        };
 
         window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
             this.options[key] = value;
@@ -27,6 +31,7 @@ var LD33 = function() {
             me.audio.muteAll();
         }
 
+        // 对象池注册对象构造
         me.pool.register( "player", Player );
         me.pool.register( "baddie", Mage);
         me.pool.register( "musketeer", Musketeer );
@@ -45,8 +50,10 @@ var LD33 = function() {
         me.audio.init ("m4a,ogg" );
 
         // Sync up post loading stuff.
+        // 所有资源文件加载完成的回调
         me.loader.onload = this.loaded.bind( this );
 
+        // 预加载所有资源
         me.loader.preload( GameResources );
 
         me.state.change( me.state.LOADING );
@@ -57,6 +64,7 @@ var LD33 = function() {
         return;
     };
 
+    // 屏蔽右键呼出菜单
     this.rightClickProxy = function(e){
         if (e.button === 2) {
             e.preventDefault();
@@ -69,6 +77,7 @@ var LD33 = function() {
      */
     this.loaded = function() {
 
+        // 场景绑定
         me.state.set( me.state.INTRO, new RadmarsScreen() );
         me.state.set( me.state.MENU, new TitleScreen() );
         me.state.set( me.state.PLAY, new PlayScreen() );
