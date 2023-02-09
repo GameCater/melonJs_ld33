@@ -83,9 +83,11 @@ var LD33 = function() {
         me.state.set( me.state.PLAY, new PlayScreen() );
         me.state.set( me.state.GAMEOVER, new GameOverScreen() );
 
+        // 触发PLAY state onResetEvent回调的执行
         me.state.change(this.options.skipIntro ? me.state.PLAY : me.state.INTRO);
     };
 };
+
 
 LD33.newBaddie = function(x, y, settings) {
     var classes = {
@@ -96,6 +98,7 @@ LD33.newBaddie = function(x, y, settings) {
         'skeleton': 'Skeleton',
     };
     // #ProHacks
+    // TODO
     return new window[classes[settings.unitType]](x, y, {
         zombie: settings.zombie,
         player: settings.player,
@@ -103,7 +106,9 @@ LD33.newBaddie = function(x, y, settings) {
     });
 };
 
+
 LD33.data = {currentLevel:"", beatGame:false};
+
 
 LD33.HUD = LD33.HUD || {};
 
@@ -122,6 +127,7 @@ LD33.HUD.Container = me.ObjectContainer.extend({
         this.name = "HUD";
     },
 
+    // 加载HUD自动调用startGame
     startGame:function(){
         console.log("HUD start game");
         me.game.world.removeChild(this);
@@ -151,6 +157,7 @@ LD33.HUD.BoxDisplay = me.Renderable.extend( {
         this.font = new me.BitmapFont("16x16_font", 16);
         //this.font.set("right");
 
+        // 获取加载的资源引用
         this.box = me.loader.getImage("selectBox");
         this.hpBacking = me.loader.getImage("hp_bar_backing");
         this.hpAlly = me.loader.getImage("hp_bar_ally");
@@ -180,6 +187,7 @@ LD33.HUD.BoxDisplay = me.Renderable.extend( {
         this.mouseDownPos = new me.Vector2d(0, 0);
 
         // enable the keyboard
+        // 允许按住键盘O键的同时移动鼠标，效果等同于长按鼠标左键并移动
         me.input.bindKey(me.input.KEY.O, "proxy_mouse_left");
         me.input.bindPointer(me.input.KEY.O);
         me.input.bindPointer(me.input.mouse.LEFT, me.input.KEY.O);
@@ -238,42 +246,47 @@ LD33.HUD.BoxDisplay = me.Renderable.extend( {
                 var x = me.input.mouse.pos.x + me.game.viewport.pos.x-16;
                 var y = me.input.mouse.pos.y + me.game.viewport.pos.y-16;
 
-
-
+                // 选中的玩家阵营怪物移动到鼠标右键点击位置
                 me.state.current().playerArmy.forEach(function(target) {
                     if(target.selected){
                         target.moveToPos(x,y);
                         selected++;
                     }
-
                 }.bind(this));
 
+                // 播放右击定位动画
                 if(this.moveMarker != null){
                     this.moveMarker.show(x,y);
-                }
-
-                if(selected > 0){
-                   // me.state.current().player.moveToPos(x,y);
                 }
             }
         }
     },
 
+    // 框选军队
     update : function () {
         if(!this.render) return;
 
+        // 判断是否长按鼠标左键或者键盘O键
         if (me.input.isKeyPressed('proxy_mouse_left'))  {
+            // 只记录第一次左击时
             if( !this.mouseLeftDown ){
                 this.mouseLeftDown = true;
+
+                console.log('点击时坐标');
+
                 this.mouseDownPos.x = me.input.mouse.pos.x;
                 this.mouseDownPos.y = me.input.mouse.pos.y;
             }
 
         }else{
+
             if( this.mouseLeftDown ){
                 this.mouseLeftDown = false;
 
+                console.log('松开左键后鼠标坐标');
+
                 //start of box
+                // 记录框选后方形左上角坐标（相对于viewport）
                 var sx = this.mouseDownPos.x;
                 var sy = this.mouseDownPos.y;
 
@@ -292,16 +305,20 @@ LD33.HUD.BoxDisplay = me.Renderable.extend( {
                 }
 
                 //this is a hack to make a 'tiny box' for single click targeting.
+                // 不用拉选框，直接点选一个
                 if( w <= 4){ w = 16; sx-=8; };
                 if( h <= 4 ){ h = 16; sy-=8; };
 
-                //console.log("box! " + sx + " , " + sy + " / " + w + ", " + h);
+                // console.log("box! " + sx + " , " + sy + " / " + w + ", " + h);
 
                 me.state.current().playerArmy.forEach(function(target) {
+
                     //box select
+                    // 获得target对象距离当前camera2d viewport的坐标
                     var x = target.pos.x - me.game.viewport.pos.x + 16;
                     var y = target.pos.y - me.game.viewport.pos.y + 16;
 
+                    // 判断target对象坐标是否在框选盒里
                     if( x > sx && x < sx + w && y > sy && y < sy + h ){
                         if(target.player != true){
                             target.selected = true;
@@ -322,43 +339,36 @@ LD33.HUD.BoxDisplay = me.Renderable.extend( {
 
         me.game.world.sort();
 
-        //void ctx.drawImage(image, dx, dy, dWidth, dHeight);
-        // this.pos.x +
-        // this.pos.y +
-
-        // this.mouseDownPos.x = me.input.mouse.pos.x;
-        // this.mouseDownPos.y = me.input.mouse.pos.y;
-
-       //
-
-
+        // 给敌人画血条
         me.state.current().baddies.forEach(function(target) {
             var x = target.pos.x - me.game.viewport.pos.x;
             var y = target.pos.y - me.game.viewport.pos.y- 5;
+
             if(target.hp < target.maxHP){
                 context.drawImage( this.hpBacking, x, y );
-                if(target.hp  > 0) context.drawImage( this.hpBaddie, x, y, 32 * (target.hp / target.maxHP), 4 );
+                if(target.hp > 0) context.drawImage( this.hpBaddie, x, y, 32 * (target.hp / target.maxHP), 4 );
             }
         }.bind(this));
 
+        // 给自己人画血条以及选中效果
         me.state.current().playerArmy.forEach(function(target) {
 
-                var x = target.pos.x - me.game.viewport.pos.x;
-                var y = target.pos.y - me.game.viewport.pos.y- 5;
-                if(target.hp < target.maxHP && target.hp > 0){
-                    context.drawImage( this.hpBacking, x, y );
-                    if(target.hp  > 0)  context.drawImage( this.hpAlly, x, y, 32 * (target.hp / target.maxHP), 4 );
-                }
+            var x = target.pos.x - me.game.viewport.pos.x;
+            var y = target.pos.y - me.game.viewport.pos.y- 5;
 
-                if(target.selected){
-                    context.drawImage( this.unitSelected, x, y+5 );
-                }
+            if(target.hp < target.maxHP && target.hp > 0){
+                context.drawImage( this.hpBacking, x, y );
+                if(target.hp  > 0)  context.drawImage( this.hpAlly, x, y, 32 * (target.hp / target.maxHP), 4 );
+            }
+
+            if(target.selected){
+                context.drawImage( this.unitSelected, x, y+5 );
+            }
         }.bind(this));
 
+        // 画框选盒
         if(this.mouseLeftDown){
             //this.mousePosLocal  = me.input.globalToLocal(me.input.mouse.pos.x, me.input.mouse.pos.y );
-
-
 
             //start of box
             var sx = this.mouseDownPos.x;
@@ -385,20 +395,19 @@ LD33.HUD.BoxDisplay = me.Renderable.extend( {
             context.drawImage( this.box, sx, sy, w, h );
         }
 
-        //draw the hud.
-        //
+        // 画hud(head-up display)
         context.drawImage( this.hudBackdrop, 0, 560-52 );
-
-
         this.font.draw (context,  me.state.current().baddies.length, 85, 560-25);
         this.font.draw (context,  me.state.current().playerArmy.length, 225, 560-25);
+
 
         this.blinkTimer++;
         if(this.blinkTimer >10){
             this.blinkTimer = 0;
         }
 
-
+        // show_start_text_time: 100
+        // 关卡提示的闪烁
         if(this.showStartTextTimer > 0){
             this.showStartTextTimer--;
             if(this.blinkTimer > 5){
@@ -519,7 +528,7 @@ var GameEnder = me.ObjectEntity.extend({
 });
 
 /** The game play state... */
-    var PlayScreen = me.ScreenObject.extend({
+var PlayScreen = me.ScreenObject.extend({
     init: function() {
         this.parent( true );
         this.HUD = new LD33.HUD.Container( );
@@ -543,11 +552,13 @@ var GameEnder = me.ObjectEntity.extend({
         me.game.reset();
         me.game.onLevelLoaded = function(l) {
             self.HUD.startGame();
-            me.game.viewport.fadeOut( '#000000', 1000, function() { 
-            });
+            me.game.viewport.fadeOut( '#000000', 1000);
         };
+
+        // 加载关卡1进关卡管理器
         me.levelDirector.loadLevel( level );
 
+        // 不同关卡播放不同的bgm
         if (level === "level1") {
             me.audio.play("rise");
             me.audio.stopTrack();
@@ -582,6 +593,7 @@ var GameEnder = me.ObjectEntity.extend({
     },
 
     // this will be called on state change -> this
+    // 状态切换时执行
     onResetEvent: function(newLevel) {
         console.log("onResetEvent " + newLevel );
         var self = this;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="13">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="14">
  <properties>
   <property name="background_color" value="#898989"/>
  </properties>
@@ -48,8 +48,9 @@
   </data>
  </layer>
  <objectgroup id="3" name="entities">
-  <object id="1" name="player" x="385" y="289" width="32" height="32"/>
+  <object id="1" name="player" x="221.667" y="352.333" width="32" height="32"/>
   <object id="2" name="knight" x="705" y="354" width="32" height="32"/>
+  <object id="13" name="knight" x="626" y="398.667" width="32" height="32"/>
   <object id="3" name="knight" x="704" y="449" width="32" height="32"/>
   <object id="4" name="grave" x="225" y="194" width="32" height="32"/>
   <object id="5" name="grave" x="161" y="127" width="32" height="32"/>
